@@ -1,0 +1,105 @@
+# Implementation Plan - AI-Powered Student Recruitment Platform
+
+Build a modern, responsive, and highly interactive recruitment platform designed for students (Job Seekers) and recruiters, utilizing a Node.js + Express backend and a React (Vite) frontend.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Database Selection:** We will use SQLite via Sequelize for local development. SQLite requires no local database service installation and stores data in a file (`database.sqlite`). The schema is fully compatible with PostgreSQL and can be switched by changing connection strings in the `.env` file.
+> 
+> **File Uploads & Resume Parsing:** For MVP stability, file uploads will write to a local `uploads/` directory on the server (simulating Cloudinary), and we will provide mock resume parsing/parsing simulation that evaluates uploaded PDFs.
+> 
+> **AI Integrations:** For the MVP, we will simulate the AI responses (Resume Analysis, GitHub Code Quality, Career Coach, and Profile Verification) using modular service layers in the backend. These mock services will generate dynamic scores and descriptions but are structured so that they can be easily replaced with OpenAI, Gemini, or Anthropic API calls.
+
+## Proposed Changes
+
+We will organize the application into a mono-repo structure in the workspace:
+- `/backend`: Node.js, Express, Sequelize (SQLite), JWT authentication, local uploads, mock AI services.
+- `/frontend`: React (Vite), Vanilla CSS (glassmorphism/dark mode/animations), Lucide icons, custom interactive SVG/CSS charts.
+
+---
+
+### Backend Components
+
+#### [NEW] [backend/package.json](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/backend/package.json)
+Contains backend dependencies: `express`, `sequelize`, `sqlite3`, `bcryptjs`, `jsonwebtoken`, `cors`, `dotenv`, `multer`, etc.
+
+#### [NEW] [backend/server.js](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/backend/server.js)
+The entry point of the Express server. Sets up middleware, database connection, routes, error handlers, and static folders.
+
+#### [NEW] [backend/config/db.js](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/backend/config/db.js)
+Initializes Sequelize with SQLite or PostgreSQL based on environment variables.
+
+#### [NEW] [backend/models/](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/backend/models)
+Contains database models:
+- `User.js` (email, password, role)
+- `StudentProfile.js` (personal info, URLs, AI scores)
+- `Skill.js` (name, proficiency)
+- `Certification.js` (name, issuer, date, URL)
+- `Project.js` (name, description, github, AI feedback)
+- `Experience.js` (type, title, company, duration)
+- `Achievement.js` (type, title, date)
+- `RecruiterProfile.js` (company name, industry, recruiter info)
+- `Job.js` (details, requirements, ideal candidate profile)
+- `Application.js` (jobId, studentProfileId, match percentages, status, notes)
+- `Notification.js` (userId, message, isRead)
+- `PlatformLog.js` (admin logs)
+
+#### [NEW] [backend/services/aiService.js](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/backend/services/aiService.js)
+Contains mock/simulated AI endpoints for:
+- **Resume Analyzer:** scores grammar, ATS compatibility, keywords, and identifies missing skills.
+- **Skill Assessment:** analyzes simulated GitHub repositories and commits to output technical strengths/weaknesses.
+- **Profile Verification:** calculates Trust Scores (0-100) and consistency markers.
+- **Career Coach:** provides personalized suggestions, interview questions, and roadmap templates.
+- **Matching Engine:** evaluates candidate profiles against job requirements to calculate component matches and triggers automatic forwarding when match >= 85%.
+
+#### [NEW] [backend/controllers/](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/backend/controllers)
+Defines handlers for auth, student profiles, recruiter jobs, match calculation, and admin dashboards.
+
+---
+
+### Frontend Components
+
+#### [NEW] [frontend/package.json](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/frontend/package.json)
+Vite + React dependencies: `react`, `react-dom`, `lucide-react`, and dev tools.
+
+#### [NEW] [frontend/src/index.css](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/frontend/src/index.css)
+Defines the modern Glassmorphism, Dark/Light Mode variable mapping, custom animations, gradients, and custom utility classes.
+
+#### [NEW] [frontend/src/App.jsx](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/frontend/src/App.jsx)
+Main routing component. Redirects users based on authentication status and user roles. Handles Light/Dark mode state.
+
+#### [NEW] [frontend/src/components/](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/frontend/src/components)
+Reusable components:
+- `Navbar.jsx`: Brand, navigation, toggle theme, and logout.
+- `GlassCard.jsx`: Reusable container with glassmorphic styling.
+- `ProgressBar.jsx`: Custom progress indicator.
+- `Toast.jsx`: Clean pop-up notifications.
+- `Timeline.jsx`: Timeline representation for experiences and achievements.
+- `StatsChart.jsx`: Custom CSS/SVG-based interactive charts for analytics.
+
+#### [NEW] [frontend/src/pages/](file:///c:/Users/HARSHINI%20REDDY/OneDrive/Desktop/hackathon/frontend/src/pages)
+- `LandingPage.jsx`: The clean, professional landing page.
+- `WelcomeAuthPage.jsx`: Welcome screen where users select Job Seeker or Recruiter, leading to role-locked Sign-up/Login.
+- `StudentDashboard.jsx`: Complete student hub including Profile, Skill Assessment, Certifications, Experience, Achievements, ATS Resume Builder, and AI Career Coach.
+- `RecruiterDashboard.jsx`: Recruiter hub including Company Profile, Job Creator, Applicant Tracking, Matching Engine View, and Interview Scheduler.
+- `AdminDashboard.jsx`: Platform statistics, mock logs, managing users, and flagging fake profiles.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+We will verify API status using simple HTTP scripts or direct Node script tests.
+- Verify JWT login and role locking (e.g., job seeker login cannot access recruiter routes).
+- Verify AI matching engine score calculation and automatic forwarding (>85% matching).
+
+### Manual Verification
+We will run the development servers and use a web browser to test:
+1. Opening the app and viewing the Landing Page.
+2. Clicking "Get Started" to see the "Job Seeker" vs. "Recruiter" Welcome Page.
+3. Registering a student account (e.g., `student@test.com`) and verifying that logging in as Recruiter fails with a clear message.
+4. Filling the Student Profile, adding projects/skills, generating the resume, and viewing AI scores.
+5. Logging in as Recruiter, posting a job with specific skill/CGPA filters, and verifying the AI matching rank.
+6. Verifying the auto-forwarding feature (profiles >= 85% match are instantly forwarded to the recruiter applicant list).
+7. Verifying the Admin dashboard functionality (managing and flagging).
